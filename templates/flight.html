@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Search Flights - TravelGo</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: url('../static/images/flight12.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #333;
+    }
+
+    header {
+      background-color: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    main.container {
+      background-color: rgba(255, 255, 255, 0.95);
+      margin-top: 30px;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    }
+
+    form.form-inline {
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .form-control {
+      margin: 5px;
+      min-width: 180px;
+    }
+
+    .flight-card {
+      background: #f0f9ff;
+      border: 1px solid #b3daff;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .flight-info {
+      flex-grow: 1;
+    }
+
+    .book-btn {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+    }
+
+    .book-btn:hover {
+      background-color: #218838;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1><i class="fas fa-plane-departure"></i> TravelGo</h1>
+  </header>
+
+  <main class="container">
+    <h2><i class="fas fa-search-location"></i> Search & Book Flights</h2>
+
+    <form id="searchForm" class="form-inline">
+      <select id="source" class="form-control">
+        <option value="">From</option>
+        <option value="Hyderabad">Hyderabad</option>
+        <option value="Bengaluru">Bengaluru</option>
+        <option value="Chennai">Chennai</option>
+        <option value="Mumbai">Mumbai</option>
+        <option value="Delhi">Delhi</option>
+      </select>
+
+      <select id="destination" class="form-control">
+        <option value="">To</option>
+        <option value="Hyderabad">Hyderabad</option>
+        <option value="Bengaluru">Bengaluru</option>
+        <option value="Chennai">Chennai</option>
+        <option value="Mumbai">Mumbai</option>
+        <option value="Delhi">Delhi</option>
+      </select>
+
+      <select id="sortPrice" class="form-control">
+        <option value="">Sort by Price</option>
+        <option value="low">Low to High</option>
+        <option value="high">High to Low</option>
+      </select>
+
+      <input type="date" id="date" class="form-control" />
+      <input type="number" id="numPersons" class="form-control" min="1" value="1" placeholder="Passengers" />
+      <button type="button" id="search-btn" class="btn btn-primary">
+        <i class="fas fa-search"></i> Search
+      </button>
+    </form>
+
+    <div id="flight-list" class="mt-4"></div>
+  </main>
+
+  <script>
+    const flights = [
+      { id: 'FLT001', airline: 'IndiGo', number: '6E-234', source: 'Hyderabad', dest: 'Mumbai', depart: '08:00', arrive: '09:30', price: 3500 },
+      { id: 'FLT002', airline: 'Vistara', number: 'UK-876', source: 'Bengaluru', dest: 'Delhi', depart: '12:00', arrive: '14:45', price: 4500 },
+      { id: 'FLT003', airline: 'Air India', number: 'AI-543', source: 'Chennai', dest: 'Hyderabad', depart: '06:00', arrive: '07:20', price: 2800 },
+      { id: 'FLT004', airline: 'SpiceJet', number: 'SG-123', source: 'Mumbai', dest: 'Bengaluru', depart: '18:00', arrive: '19:30', price: 3200 }
+    ];
+
+    function filterFlights() {
+      const src = document.getElementById('source').value;
+      const dst = document.getElementById('destination').value;
+      const date = document.getElementById('date').value;
+      const pax = parseInt(document.getElementById('numPersons').value);
+      const sort = document.getElementById('sortPrice').value;
+      const list = document.getElementById('flight-list');
+      list.innerHTML = '';
+
+      if (!src || !dst || !date || pax < 1) return;
+
+      let filtered = flights.filter(f => f.source === src && f.dest === dst);
+
+      if (sort === 'low') filtered.sort((a, b) => a.price - b.price);
+      else if (sort === 'high') filtered.sort((a, b) => b.price - a.price);
+
+      if (filtered.length === 0) {
+        list.innerHTML = `<div class="alert alert-warning">No flights found for selected filters.</div>`;
+        return;
+      }
+
+      filtered.forEach(f => {
+        const card = document.createElement('div');
+        card.className = 'flight-card';
+        card.innerHTML = `
+          <div class="flight-info">
+            <strong>${f.airline} ${f.number}</strong><br>
+            <span>${f.source} → ${f.dest}</span><br>
+            <span>${date} | ${f.depart} - ${f.arrive}</span>
+          </div>
+          <div class="price-info">
+            ₹${f.price} x ${pax} = ₹${f.price * pax}<br>
+            <button class="book-btn mt-2"
+              onclick="confirmFlight('${f.id}','${f.airline}','${f.number}','${f.source}','${f.dest}','${f.depart}','${f.arrive}','${date}',${pax},${f.price})">
+              Book
+            </button>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    function confirmFlight(id, airline, number, src, dst, depart, arrive, date, pax, price) {
+      const url = `/confirm_flight_details?flight_id=${id}&airline=${airline}&flight_number=${number}&source=${src}&destination=${dst}&departure=${depart}&arrival=${arrive}&date=${date}&passengers=${pax}&price=${price}`;
+      window.location.href = url;
+    }
+
+    document.getElementById('search-btn').addEventListener('click', filterFlights);
+    document.getElementById('sortPrice').addEventListener('change', filterFlights);
+  </script>
+</body>
+</html>

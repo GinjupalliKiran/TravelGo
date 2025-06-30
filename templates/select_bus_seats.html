@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Select Seats - TravelGo</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"/>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: url('https://images.unsplash.com/photo-1533106418989-88406c7cc8e0?auto=format&fit=crop&w=1950&q=80') no-repeat center center fixed;
+      background-size: cover;
+      color: #333;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      background-color: rgba(255, 255, 255, 0.95);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    h2 {
+      text-align: center;
+      color: #004aad;
+      margin-bottom: 20px;
+    }
+
+    .info {
+      text-align: center;
+      font-size: 18px;
+      margin-bottom: 25px;
+    }
+
+    .seat-map {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
+      justify-items: center;
+      margin-bottom: 25px;
+    }
+
+    .seat {
+      width: 40px;
+      height: 40px;
+      background-color: #e0e0e0;
+      border: 2px solid #ccc;
+      border-radius: 6px;
+      text-align: center;
+      line-height: 38px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .seat:hover {
+      background-color: #d0ebff;
+    }
+
+    .seat.selected {
+      background-color: #28a745;
+      color: white;
+      border-color: #218838;
+    }
+
+    .seat.booked {
+      background-color: #ccc;
+      color: #666;
+      cursor: not-allowed;
+      border-color: #aaa;
+    }
+
+    button[type="submit"] {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      background-color: #004aad;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #00338d;
+    }
+
+    @media (max-width: 576px) {
+      .seat-map {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+      }
+
+      .seat {
+        width: 36px;
+        height: 36px;
+        line-height: 34px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Select Your Seats</h2>
+    <div class="info">You can select <strong>{{ booking.num_persons }}</strong> seat(s)</div>
+
+    <form method="POST" action="{{ url_for('final_confirm_bus_booking') }}" onsubmit="return validateSeats()">
+      <div class="seat-map" id="seat-map">
+        {% for seat in all_seats %}
+          <div class="seat {% if seat in booked_seats %}booked{% endif %}" 
+               onclick="selectSeat(this)" 
+               data-seat="{{ seat }}">{{ seat }}</div>
+        {% endfor %}
+      </div>
+
+      <input type="hidden" name="selected_seats" id="selected-seats" />
+      <button type="submit">Confirm Booking</button>
+    </form>
+  </div>
+
+  <script>
+    const maxSeats = parseInt("{{ booking.num_persons }}");
+    const selected = [];
+
+    function selectSeat(elem) {
+      if (elem.classList.contains('booked')) return;
+
+      const seat = elem.getAttribute('data-seat');
+
+      if (elem.classList.contains('selected')) {
+        elem.classList.remove('selected');
+        const index = selected.indexOf(seat);
+        if (index > -1) selected.splice(index, 1);
+      } else if (selected.length < maxSeats) {
+        elem.classList.add('selected');
+        selected.push(seat);
+      } else {
+        alert(`You can only select ${maxSeats} seat(s).`);
+      }
+
+      document.getElementById('selected-seats').value = selected.join(',');
+    }
+
+    function validateSeats() {
+      if (selected.length !== maxSeats) {
+        alert(`Please select exactly ${maxSeats} seat(s).`);
+        return false;
+      }
+      return true;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Confirm Bus Booking - TravelGo</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: url('https://images.unsplash.com/photo-1558888593-49f9a1224842?auto=format&fit=crop&w=1950&q=80') no-repeat center center fixed;
+            background-size: cover;
+            color: #333;
+        }
+
+        header {
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        nav a {
+            color: white;
+            margin: 0 15px;
+            text-decoration: none;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            margin-top: 30px;
+            border-radius: 12px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .booking-summary {
+            background: #f0f9ff;
+            border: 1px solid #b3daff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .total-price {
+            font-weight: bold;
+            font-size: 18px;
+            margin-top: 15px;
+            color: #004aad;
+        }
+
+        .buttons-container {
+            margin-top: 20px;
+        }
+
+        #confirmBookingBtn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            margin-right: 10px;
+        }
+
+        #confirmBookingBtn:hover {
+            background-color: #218838;
+        }
+
+        .message-box {
+            display: none;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .message-box.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .message-box.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>TravelGo</h1>
+        <nav>
+            <a href="/home">Home</a>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/logout">Logout</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h2><i class="fas fa-check-circle"></i> Confirm Bus Booking</h2>
+        <div id="messageBox" class="message-box" role="alert"></div>
+
+        <div class="booking-summary">
+            <h3>Booking Details:</h3>
+            <p><strong>Bus Name:</strong> {{ booking.name }}</p>
+            <p><strong>Route:</strong> {{ booking.source }} to {{ booking.destination }}</p>
+            <p><strong>Date:</strong> {{ booking.travel_date }}</p>
+            <p><strong>Time:</strong> {{ booking.time }}</p>
+            <p><strong>Type:</strong> {{ booking.type }}</p>
+            <p><strong>Passengers:</strong> {{ booking.num_persons }}</p>
+            {% if booking.selected_seats %}
+                <p><strong>Selected Seats:</strong> {{ booking.selected_seats | join(', ') }}</p>
+            {% endif %}
+            <p class="total-price">Total Price: ₹{{ "{:,.2f}".format(booking.total_price) }}</p>
+        </div>
+
+        <div class="buttons-container">
+            <button id="confirmBookingBtn">Confirm Booking</button>
+            <a href="/bus" class="btn btn-secondary">Go Back to Search</a>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2025 TravelGo. All rights reserved.
+    </footer>
+
+    <script>
+        function showMessage(message, type = 'error', redirectUrl = null) {
+            const messageBox = document.getElementById('messageBox');
+            messageBox.textContent = message;
+            messageBox.className = `message-box ${type}`;
+            messageBox.style.display = 'block';
+
+            if (redirectUrl) {
+                setTimeout(() => {
+                    window.location.href = redirectUrl;
+                }, 2000);
+            } else {
+                setTimeout(() => {
+                    messageBox.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        document.getElementById('confirmBookingBtn').addEventListener('click', async function() {
+            try {
+                const response = await fetch('/final_confirm_booking', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage(result.message, 'success', result.redirect);
+                } else {
+                    showMessage(result.message, 'error', result.redirect);
+                }
+            } catch (error) {
+                console.error('Error confirming booking:', error);
+                showMessage('An error occurred while confirming your booking. Please try again.', 'error');
+            }
+        });
+    </script>
+</body>
+</html>

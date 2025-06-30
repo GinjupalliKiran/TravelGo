@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Search Trains - TravelGo</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: url('../static/images/train.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #333;
+    }
+
+    header {
+      background-color: #004aad;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    header nav {
+      margin-top: 10px;
+    }
+
+    header nav a {
+      color: #fff;
+      margin: 0 10px;
+      text-decoration: none;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: rgba(255, 255, 255, 0.92);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    }
+
+    h2 {
+      text-align: center;
+      color: #004aad;
+      margin-bottom: 20px;
+    }
+
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: space-between;
+      margin-bottom: 30px;
+    }
+
+    select, input[type="date"], input[type="number"], button {
+      flex: 1 1 30%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1em;
+    }
+
+    button {
+      background-color: #004aad;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #003080;
+    }
+
+    #results {
+      margin-top: 20px;
+    }
+
+    .train-card {
+      background-color: #f4faff;
+      border: 1px solid #cce0f5;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .train-card h3 {
+      margin-top: 0;
+      color: #004aad;
+    }
+
+    .train-card p {
+      margin: 5px 0;
+    }
+
+    .train-card form {
+      margin-top: 10px;
+    }
+
+    .train-card button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .train-card button:hover {
+      background-color: #218838;
+    }
+
+    @media (max-width: 768px) {
+      form > * {
+        flex: 1 1 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>TravelGo</h1>
+    <nav>
+      <a href="/home">Home</a>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/logout">Logout</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <h2>🚆 Search & Book Trains</h2>
+    <form id="searchForm">
+      <select id="source" required>
+        <option value="">From</option>
+        <option value="Hyderabad">Hyderabad</option>
+        <option value="Vijayawada">Vijayawada</option>
+        <option value="Guntur">Guntur</option>
+        <option value="Bengaluru">Bengaluru</option>
+      </select>
+
+      <select id="destination" required>
+        <option value="">To</option>
+        <option value="Delhi">Delhi</option>
+        <option value="Hyderabad">Hyderabad</option>
+        <option value="Chennai">Chennai</option>
+        <option value="Mumbai">Mumbai</option>
+      </select>
+
+      <input type="date" id="travelDate" required value="2025-06-27" />
+      <input type="number" id="persons" placeholder="No. of Persons" min="1" value="1" required />
+
+      <!-- ✅ Train Type Filter Added -->
+      <select id="train_type">
+        <option value="All">All (AC/Non-AC)</option>
+        <option value="AC">AC</option>
+        <option value="Non-AC">Non-AC</option>
+      </select>
+
+      <button type="submit">Search</button>
+    </form>
+
+    <div id="results"></div>
+  </div>
+
+  <script>
+    const sampleTrains = [
+      { id: 1, name: "Duronto Express", number: "12285", source: "Hyderabad", destination: "Delhi", departure: "07:00 AM", arrival: "05:00 AM", price: 1800, date: "2025-06-27", type: "AC" },
+      { id: 2, name: "AP Express", number: "12723", source: "Hyderabad", destination: "Vijayawada", departure: "09:00 AM", arrival: "03:00 PM", price: 450, date: "2025-06-27", type: "AC" },
+      { id: 3, name: "Gouthami Express", number: "12737", source: "Guntur", destination: "Hyderabad", departure: "08:00 PM", arrival: "06:00 AM", price: 600, date: "2025-06-27", type: "Non-AC" },
+      { id: 4, name: "Chennai Express", number: "12839", source: "Bengaluru", destination: "Chennai", departure: "10:30 AM", arrival: "05:30 PM", price: 750, date: "2025-06-27", type: "Non-AC" },
+      { id: 5, name: "Mumbai Mail", number: "12101", source: "Hyderabad", destination: "Mumbai", departure: "06:00 PM", arrival: "09:00 AM", price: 1200, date: "2025-06-27", type: "AC" },
+      { id: 6, name: "Godavari Express", number: "12720", source: "Vijayawada", destination: "Hyderabad", departure: "05:00 PM", arrival: "11:00 PM", price: 400, date: "2025-06-27", type: "Non-AC" },
+    ];
+
+    document.getElementById('searchForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const source = document.getElementById('source').value.trim();
+      const destination = document.getElementById('destination').value.trim();
+      const date = document.getElementById('travelDate').value;
+      const persons = parseInt(document.getElementById('persons').value);
+      const trainType = document.getElementById('train_type').value;
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '';
+
+      const filtered = sampleTrains.filter(train =>
+        train.source === source &&
+        train.destination === destination &&
+        train.date === date &&
+        (trainType === "All" || train.type === trainType)
+      );
+
+      if (filtered.length === 0) {
+        resultsDiv.innerHTML = '<p>No trains found.</p>';
+        return;
+      }
+
+      filtered.forEach(train => {
+        const total = train.price * persons;
+        const div = document.createElement('div');
+        div.className = 'train-card';
+        div.innerHTML = `
+          <h3>${train.name} (${train.number})</h3>
+          <p><strong>From:</strong> ${train.source} <strong>To:</strong> ${train.destination}</p>
+          <p><strong>Departure:</strong> ${train.departure} <strong>Arrival:</strong> ${train.arrival}</p>
+          <p><strong>Type:</strong> ${train.type}</p>
+          <p><strong>Date:</strong> ${train.date}</p>
+          <p><strong>Price per person:</strong> ₹${train.price}</p>
+          <p><strong>Total for ${persons}:</strong> ₹${total}</p>
+          <form action="/confirm_train_details" method="get">
+            <input type="hidden" name="name" value="${train.name}" />
+            <input type="hidden" name="trainNumber" value="${train.number}" />
+            <input type="hidden" name="source" value="${train.source}" />
+            <input type="hidden" name="destination" value="${train.destination}" />
+            <input type="hidden" name="departureTime" value="${train.departure}" />
+            <input type="hidden" name="arrivalTime" value="${train.arrival}" />
+            <input type="hidden" name="price" value="${train.price}" />
+            <input type="hidden" name="date" value="${train.date}" />
+            <input type="hidden" name="persons" value="${persons}" />
+            <input type="hidden" name="trainId" value="${train.id}" />
+            <button type="submit">Book Now</button>
+          </form>
+        `;
+        resultsDiv.appendChild(div);
+      });
+    });
+  </script>
+</body>
+</html>
